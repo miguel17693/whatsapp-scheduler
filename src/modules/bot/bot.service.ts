@@ -1,6 +1,12 @@
-import { Injectable, Logger, OnModuleInit, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import { Client } from 'whatsapp-web.js';
 import * as chrono from 'chrono-node';
 import { ScheduleService } from './schedule.service';
 
@@ -10,7 +16,11 @@ export class BotService implements OnModuleInit {
   private readonly logger = new Logger(BotService.name);
   public isConnected = false;
 
-  constructor(private eventEmitter: EventEmitter2, @Inject(forwardRef(() => ScheduleService)) private scheduleService: ScheduleService) { }
+  constructor(
+    private eventEmitter: EventEmitter2,
+    @Inject(forwardRef(() => ScheduleService))
+    private scheduleService: ScheduleService,
+  ) {}
 
   onModuleInit() {
     this.client.on('qr', (qr) => {
@@ -30,7 +40,9 @@ export class BotService implements OnModuleInit {
 
     this.client.on('message', async (msg) => {
       const isGroup = msg.from.endsWith('@g.us');
-      this.logger.verbose(`Received ${isGroup ? 'group' : 'private'} message from ${msg.from}: ${msg.body}`);
+      this.logger.verbose(
+        `Received ${isGroup ? 'group' : 'private'} message from ${msg.from}: ${msg.body}`,
+      );
 
       // Handle other messages
       if (msg.body && msg.body.length > 0) {
@@ -54,7 +66,12 @@ export class BotService implements OnModuleInit {
             const data = JSON.parse(jsonStr);
 
             const whatsappIdRegex = /^\d+(@[cg]\.us)?$/;
-            if (!data.to || !whatsappIdRegex.test(data.to) || !data.message || !data.when) {
+            if (
+              !data.to ||
+              !whatsappIdRegex.test(data.to) ||
+              !data.message ||
+              !data.when
+            ) {
               msg.reply('⚠️ Missing required fields: to, message, when');
               return;
             }
@@ -87,8 +104,13 @@ export class BotService implements OnModuleInit {
               }
             }
           } catch (error) {
-            this.logger.error('Failed to parse scheduler command:', error.message);
-            msg.reply('⚠️ Invalid JSON format. Example: scheduler { "to": "1234567890@c.us", "message": "Reminder", "when": "tomorrow at 3pm" }');
+            this.logger.error(
+              'Failed to parse scheduler command:',
+              error.message,
+            );
+            msg.reply(
+              '⚠️ Invalid JSON format. Example: scheduler { "to": "1234567890@c.us", "message": "Reminder", "when": "tomorrow at 3pm" }',
+            );
           }
         }
       }

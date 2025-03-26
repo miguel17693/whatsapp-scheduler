@@ -11,7 +11,7 @@ export class BotController {
   private qrCode: string;
   constructor(
     private botService: BotService,
-    private scheduleService: ScheduleService
+    private scheduleService: ScheduleService,
   ) {}
 
   @OnEvent('qrcode.created')

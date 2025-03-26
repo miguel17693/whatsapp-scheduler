@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import { BotService } from './bot.service';
@@ -13,9 +13,9 @@ import { ScheduleService } from './schedule.service';
     ScheduleService,
     {
       provide: Client,
-      useFactory: () => new Client({ authStrategy: new LocalAuth() })
-    }
+      useFactory: () => new Client({ authStrategy: new LocalAuth() }),
+    },
   ],
-  exports: [ScheduleService]
+  exports: [ScheduleService],
 })
 export class BotModule {}
