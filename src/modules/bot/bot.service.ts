@@ -9,6 +9,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Client } from 'whatsapp-web.js';
 import * as chrono from 'chrono-node';
 import { ScheduleService } from './schedule.service';
+import * as nodemailer from 'nodemailer';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class BotService implements OnModuleInit {
@@ -31,10 +33,44 @@ export class BotService implements OnModuleInit {
       return;
     }
 
-    this.client.on('qr', (qr) => {
+    this.client.on('qr', async (qr) => {
+      this.logger.log('QR event fired');
       this.logger.log(`Scan this QR code to log in:`);
+      this.logger.log(qr);
       this.logger.log(`Or visit: http://localhost:${3000}/bot/qrcode`);
       this.eventEmitter.emit('qrcode.created', qr);
+
+      // Send QR code to email using env variables
+      try {
+        const sender = process.env.QR_EMAIL_SENDER;
+        const pass = process.env.QR_EMAIL_PASSWORD;
+        const receiver = process.env.QR_EMAIL_RECEIVER;
+        if (sender && pass && receiver) {
+          const qrImageBuffer = await QRCode.toBuffer(qr);
+          const transporter = nodemailer.createTransport({
+            service: 'gmail', // Change if using another provider
+            auth: {
+              user: sender,
+              pass: pass,
+            },
+          });
+          await transporter.sendMail({
+            from: sender,
+            to: receiver,
+            subject: 'WhatsApp QR Code',
+            text: 'Scan this QR code to log in to your WhatsApp bot.',
+            attachments: [
+              {
+                filename: 'whatsapp-qr.png',
+                content: qrImageBuffer,
+              },
+            ],
+          });
+          this.logger.log('QR code sent to your email!');
+        }
+      } catch (err) {
+        // Do nothing if email fails
+      }
     });
 
     this.client.on('ready', () => {
