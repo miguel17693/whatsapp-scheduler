@@ -20,29 +20,50 @@ export class BotService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => ScheduleService))
     private scheduleService: ScheduleService,
-  ) {}
+  ) {
+    this.logger.log('BotService constructor called');
+  }
 
   onModuleInit() {
+    this.logger.log('onModuleInit called');
+    this.logger.log('Client instance:', this.client ? 'DEFINED' : 'UNDEFINED');
+    if (!this.client) {
+      this.logger.error(
+        'WhatsApp Client is not defined! Make sure it is provided in your module.',
+      );
+      return;
+    }
+
+    this.logger.log('Registering QR event handler');
     this.client.on('qr', (qr) => {
-      this.logger.log(`QrCode: http://localhost:${3000}/bot/qrcode`);
+      this.logger.log('QR event fired');
+      this.logger.log(`Scan this QR code to log in:`);
+      this.logger.log(qr); // Add this line
+      this.logger.log(`Or visit: http://localhost:${3000}/bot/qrcode`);
       this.eventEmitter.emit('qrcode.created', qr);
     });
 
+    this.logger.log('Registering READY event handler');
     this.client.on('ready', () => {
+      this.logger.log('READY event fired');
       this.isConnected = true;
       this.logger.log("You're connected successfully!");
     });
 
+    this.logger.log('Registering DISCONNECTED event handler');
     this.client.on('disconnected', (reason) => {
+      this.logger.log('DISCONNECTED event fired');
       this.isConnected = false;
       this.logger.warn('Client disconnected:', reason);
     });
 
+    this.logger.log('Registering MESSAGE event handler');
     this.client.on('message', async (msg) => {
       const isGroup = msg.from.endsWith('@g.us');
-      this.logger.verbose(
+      this.logger.log(
         `Received ${isGroup ? 'group' : 'private'} message from ${msg.from}: ${msg.body}`,
       );
+      this.logger.log('Message object:', JSON.stringify(msg));
 
       // Handle other messages
       if (msg.body && msg.body.length > 0) {
@@ -56,8 +77,10 @@ export class BotService implements OnModuleInit {
       }
     });
 
+    this.logger.log('Registering MESSAGE_ACK event handler');
     this.client.on('message_ack', async (msg, ack) => {
-      this.logger.verbose(`You've just written: ${msg.body}`);
+      this.logger.log(`You've just written: ${msg.body}`);
+      this.logger.log('Message ACK object:', JSON.stringify(msg));
 
       if (msg.body.toLowerCase().startsWith('scheduler')) {
         {
@@ -116,19 +139,19 @@ export class BotService implements OnModuleInit {
       }
     });
 
+    this.logger.log('Registering wildcard event handler');
     this.client.on('*', (event, ...args) => {
       this.logger.debug(`Client event: ${event}`, args);
     });
 
+    this.logger.log('Registering AUTH_FAILURE event handler');
     this.client.on('auth_failure', (msg) => {
+      this.logger.log('AUTH_FAILURE event fired');
       this.logger.error('Authentication failure:', msg);
     });
 
-    this.client.on('disconnected', (reason) => {
-      this.logger.warn('Client disconnected:', reason);
-    });
-
     try {
+      this.logger.log('Calling client.initialize()');
       this.client.initialize();
       this.logger.log('WhatsApp client initialization started');
     } catch (error) {

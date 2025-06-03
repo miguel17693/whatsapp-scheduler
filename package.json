@@ -27,6 +27,7 @@
     "@nestjs/schedule": "^5.0.1",
     "chrono-node": "^2.7.8",
     "cron": "^4.1.0",
+    "puppeteer": "^24.10.0",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
