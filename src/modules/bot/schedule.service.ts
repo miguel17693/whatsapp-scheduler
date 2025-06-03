@@ -58,18 +58,26 @@ export class ScheduleService {
             `Client exists: ${!!this.client}, BotService isConnected: ${this.botService.isConnected}`,
           );
           if (!this.client || !this.botService.isConnected) {
-            this.logger.error('Client not available for message delivery - state:', {
-              clientExists: !!this.client,
-              isConnected: this.botService.isConnected,
-            });
-            this.logger.warn('Client not connected - skipping message delivery');
+            this.logger.error(
+              'Client not available for message delivery - state:',
+              {
+                clientExists: !!this.client,
+                isConnected: this.botService.isConnected,
+              },
+            );
+            this.logger.warn(
+              'Client not connected - skipping message delivery',
+            );
             messagesToKeep.push(msg);
             continue;
           }
 
           this.logger.log(`Attempting to send scheduled message to ${msg.to}`);
           await this.client.sendMessage(msg.to, msg.content).catch((error) => {
-            this.logger.error('Message sending failed with error:', error.stack);
+            this.logger.error(
+              'Message sending failed with error:',
+              error.stack,
+            );
             throw error;
           });
           this.logger.log(`Successfully sent message to ${msg.to}`);
@@ -95,12 +103,6 @@ export class ScheduleService {
       }
     }
 
-    this.logger.verbose(
-      `Messages to keep after check: ${JSON.stringify(messagesToKeep)}`,
-    );
     this.scheduledMessages = messagesToKeep;
-    this.logger.verbose(
-      `[checkScheduledMessages] Updated scheduledMessages length: ${this.scheduledMessages.length}`,
-    );
   }
 }
